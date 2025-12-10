@@ -17,3 +17,6 @@ There are special-function keys:
 
 I purchased two foot pedals from Amazon (Hint: Look for "USB Foot Pedal"). Each one will emit a single key press when pressed. Attach them to the computer and use the pedals as buzzer buttons.
 
+# Ready?
+
+<button onclick="window.location.href='gameshow.html'">Start Game</button>
