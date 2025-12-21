@@ -61,6 +61,36 @@
       backdrop-filter: blur(6px);
     }
 
+    /* Side buzzers */
+    .buzzer{
+      position:absolute;
+      top:50%;
+      transform: translateY(-50%);
+      width:160px;
+      height:160px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,80,80,.14), rgba(120,20,20,.55) 60%, rgba(0,0,0,.65) 100%);
+      border: 2px solid rgba(255,120,120,.25);
+      box-shadow: inset 0 10px 20px rgba(0,0,0,.5);
+      filter: saturate(.9) brightness(.85);
+      transition: filter .2s ease, box-shadow .2s ease;
+      pointer-events:none;
+      z-index: 1;
+    }
+    .buzzer.left{ left: 12px; }
+    .buzzer.right{ right: 12px; }
+    .buzzer.buzzing{
+      filter: saturate(1.25) brightness(1.35);
+      box-shadow:
+        0 0 28px rgba(255,90,90,.45),
+        inset 0 10px 20px rgba(0,0,0,.35);
+      animation: buzzer-flash 320ms ease-in-out infinite alternate;
+    }
+    @keyframes buzzer-flash{
+      0% { transform: translateY(-50%) scale(1.00); }
+      100% { transform: translateY(-50%) scale(1.06); }
+    }
+
     .strikes{
       flex: 1;
       display:flex;
@@ -366,6 +396,8 @@
 <body>
   <div class="app">
     <div class="frame" id="frame">
+      <div class="buzzer left" id="leftBuzzer" aria-hidden="true"></div>
+      <div class="buzzer right" id="rightBuzzer" aria-hidden="true"></div>
       <div class="topbar">
         <div class="title">
           <h1>Answer Guesser Board</h1>
@@ -506,6 +538,12 @@
     const qLabelEl = document.getElementById("qLabel");
     const totalScoreEl = document.getElementById("totalScore");
     const multiplierEl = document.getElementById("multiplier");
+    const leftBuzzerEl = document.getElementById("leftBuzzer");
+    const rightBuzzerEl = document.getElementById("rightBuzzer");
+
+    // Buzzer: allow only one active at a time
+    let activeBuzzer = null; // 'left' | 'right' | null
+    let activeBuzzerAudio = null;
 
     function resetToPrompt() {
       currentQuestionIndex = null;
@@ -521,6 +559,15 @@
       strikes = 0;
       clearStrikeTimer();
       renderStrikes();
+
+      // Stop any active buzzer and clear visuals
+      if (activeBuzzerAudio) {
+        try { activeBuzzerAudio.pause(); } catch {}
+        activeBuzzerAudio = null;
+      }
+      if (leftBuzzerEl) leftBuzzerEl.classList.remove('buzzing');
+      if (rightBuzzerEl) rightBuzzerEl.classList.remove('buzzing');
+      activeBuzzer = null;
     }
 
     function clampQuestionNumber(n1based) {
@@ -695,6 +742,18 @@
         return;
       }
 
+      // Left/right buzzers: always available
+      if (key === 'a' || key === 'A') {
+        e.preventDefault();
+        triggerBuzzer('left');
+        return;
+      }
+      if (key === 'b' || key === 'B') {
+        e.preventDefault();
+        triggerBuzzer('right');
+        return;
+      }
+
       // If not in a game, ignore other keys
       if (currentQuestionIndex === null) return;
 
@@ -732,6 +791,33 @@
         revealSlot(slot);
       }
     });
+
+    function triggerBuzzer(side){
+      if (activeBuzzer) return; // ignore if one is already buzzing
+      const el = side === 'left' ? leftBuzzerEl : rightBuzzerEl;
+      if (!el) return;
+      el.classList.add('buzzing');
+      try{
+        const audio = new Audio(sndBuzz.src);
+        audio.volume = sndBuzz.volume ?? 1.0;
+        activeBuzzer = side;
+        activeBuzzerAudio = audio;
+        audio.addEventListener('ended', () => {
+          el.classList.remove('buzzing');
+          activeBuzzer = null;
+          activeBuzzerAudio = null;
+        });
+        audio.play().catch(() => {
+          el.classList.remove('buzzing');
+          activeBuzzer = null;
+          activeBuzzerAudio = null;
+        });
+      }catch{
+        el.classList.remove('buzzing');
+        activeBuzzer = null;
+        activeBuzzerAudio = null;
+      }
+    }
 
     // Initialize
     resetToPrompt();
