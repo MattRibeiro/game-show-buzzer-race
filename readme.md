@@ -19,4 +19,4 @@ I purchased two foot pedals from Amazon (Hint: Look for "USB Foot Pedal"). Each 
 
 # Ready?
 
-<button onclick="window.location.href='gameshow.html'">Start Game</button>
+<button onclick="window.location.href='answerboard.html'">Start Game</button>
