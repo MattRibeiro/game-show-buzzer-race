@@ -667,8 +667,8 @@
       buildBoard(idx);
       overlayEl.style.display = "none";
 
-      // Generate QR for host view
-      try { generateQrForQuestion(idx); } catch { /* ignore */ }
+      // // Generate QR for host view
+      // try { generateQrForQuestion(idx); } catch { /* ignore */ }
 
       strikes = 0;
       clearStrikeTimer();
@@ -781,10 +781,10 @@
 
     function generateQrForQuestion(questionIndex){
       if (!window.pako || !window.QRCode || !qrBoxEl) return;
-      const text = formatAnswersText(questionIndex);
+      const text = `1234\n${formatAnswersText(questionIndex)}`; // 1234 = hostview code
       const compressed = window.pako.deflate(text);
       const payload = base64UrlFromBytes(compressed);
-      const url = `https://example.com/hostview.html#${payload}`;
+      const url = `https://mattribeiro.github.io/game-show-buzzer-race/hostview.html#${payload}`;
 
       qrBoxEl.innerHTML = "";
       qrBoxEl.style.display = "block";
@@ -808,6 +808,17 @@
       if (key.toLowerCase() === "r") {
         e.preventDefault();
         resetToPrompt();
+        return;
+      }
+
+      if (key.toLowerCase() === 'q') {
+        // show/hide QR code
+        e.preventDefault();
+        if (qrBoxEl.style.display === 'none') {
+          generateQrForQuestion(currentQuestionIndex);
+        } else {
+          qrBoxEl.style.display = 'none';
+        }
         return;
       }
 
