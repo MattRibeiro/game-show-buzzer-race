@@ -93,6 +93,15 @@
       const inflated = window.pako.inflate(compressed);
       const text = new TextDecoder("utf-8").decode(inflated);
 
+      // first line of the text is the "password", get it and then prompt user for it
+      const password = text.split("\n")[0];
+      if (password) {
+        const answer = prompt("Enter password:", "");
+        if (answer !== password) {
+          throw new Error("Incorrect password.");
+        }
+      }
+
       output.textContent = text;
     } catch (err) {
       output.className = "error";
