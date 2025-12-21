@@ -63,7 +63,7 @@
 
     /* Side buzzers */
     .buzzer{
-      position:absolute;
+      position:fixed;
       top:50%;
       transform: translateY(-50%);
       width:160px;
@@ -75,7 +75,7 @@
       filter: saturate(.9) brightness(.85);
       transition: filter .2s ease, box-shadow .2s ease;
       pointer-events:none;
-      z-index: 1;
+      z-index: 20;
     }
     .buzzer.left{ left: 12px; }
     .buzzer.right{ right: 12px; }
@@ -745,12 +745,12 @@
       // Left/right buzzers: always available
       if (key === 'a' || key === 'A') {
         e.preventDefault();
-        triggerBuzzer('left');
+        triggerBuzzer('right');
         return;
       }
       if (key === 'b' || key === 'B') {
         e.preventDefault();
-        triggerBuzzer('right');
+        triggerBuzzer('left');
         return;
       }
 
