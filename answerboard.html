@@ -391,6 +391,22 @@
       font-size:12px;
       color: var(--text);
     }
+
+    /* QR code box */
+    #qrBox{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      padding:8px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: white;
+      backdrop-filter: blur(4px);
+      box-shadow: var(--shadow);
+      z-index: 30;
+      display:none;
+    }
+    #qrBox canvas, #qrBox img{ display:block; }
   </style>
 </head>
 <body>
@@ -442,6 +458,13 @@
       </div>
     </div>
   </div>
+
+  <!-- QR container -->
+  <div id="qrBox" aria-label="Host view QR"></div>
+
+  <!-- libs for QR generation (deflate + QR) -->
+  <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     // --- Hardcoded answers: answers[questionIndex][answerIndex] = [text, points]
@@ -540,6 +563,7 @@
     const multiplierEl = document.getElementById("multiplier");
     const leftBuzzerEl = document.getElementById("leftBuzzer");
     const rightBuzzerEl = document.getElementById("rightBuzzer");
+    const qrBoxEl = document.getElementById("qrBox");
 
     // Buzzer: allow only one active at a time
     let activeBuzzer = null; // 'left' | 'right' | null
@@ -559,6 +583,12 @@
       strikes = 0;
       clearStrikeTimer();
       renderStrikes();
+
+      // Hide QR when back to prompt
+      if (qrBoxEl) {
+        qrBoxEl.style.display = "none";
+        qrBoxEl.innerHTML = "";
+      }
 
       // Stop any active buzzer and clear visuals
       if (activeBuzzerAudio) {
@@ -637,6 +667,9 @@
       buildBoard(idx);
       overlayEl.style.display = "none";
 
+      // // Generate QR for host view
+      // try { generateQrForQuestion(idx); } catch { /* ignore */ }
+
       strikes = 0;
       clearStrikeTimer();
       renderStrikes();
@@ -714,7 +747,6 @@
 
     function addStrike() {
       if (currentQuestionIndex === null) return;
-
       // If already at 3, ignore additional W presses until it resets
       if (strikes >= 3) return;
 
@@ -723,6 +755,43 @@
       sndWrong.play();
     }
 
+    // ---- QR generation ----
+    function base64UrlFromBytes(bytes){
+      // Convert Uint8Array -> base64url (browser-safe)
+      let binary = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunk) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+      }
+      const b64 = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      return b64;
+    }
+
+    function formatAnswersText(questionIndex){
+      const q = answers[questionIndex];
+      const lines = [];
+      lines.push(`Answers for Question ${questionIndex + 1}`);
+      lines.push("");
+      for (let i = 0; i < q.length; i++) {
+        const [text, pts] = q[i];
+        lines.push(`${i + 1}. ${text} — ${pts}`);
+      }
+      return lines.join("\n");
+    }
+
+    function generateQrForQuestion(questionIndex){
+      if (!window.pako || !window.QRCode || !qrBoxEl) return;
+      const text = `1234\n${formatAnswersText(questionIndex)}`; // 1234 = hostview code
+      const compressed = window.pako.deflate(text);
+      const payload = base64UrlFromBytes(compressed);
+      const url = `https://mattribeiro.github.io/game-show-buzzer-race/hostview.html#${payload}`;
+
+      qrBoxEl.innerHTML = "";
+      qrBoxEl.style.display = "block";
+      // 140px square QR looks balanced against UI
+      const size = 200;
+      new window.QRCode(qrBoxEl, { text: url, width: size, height: size, correctLevel: window.QRCode.CorrectLevel.M });
+    }
 
     // Input handlers
     startBtn.addEventListener("click", () => startGame(Number(qInputEl.value)));
@@ -739,6 +808,17 @@
       if (key.toLowerCase() === "r") {
         e.preventDefault();
         resetToPrompt();
+        return;
+      }
+
+      if (key.toLowerCase() === 'q') {
+        // show/hide QR code
+        e.preventDefault();
+        if (qrBoxEl.style.display === 'none') {
+          generateQrForQuestion(currentQuestionIndex);
+        } else {
+          qrBoxEl.style.display = 'none';
+        }
         return;
       }
 
