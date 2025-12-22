@@ -467,10 +467,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
+  const hostviewCode = "aa";
     // --- Hardcoded answers: answers[questionIndex][answerIndex] = [text, points]
   const answers = [
-    // Question 1: Name a rule parents make on Christmas Day.
     [
+      "Name a rule parents make on Christmas Day.",
       ["No Opening Until Morning", 30],
       ["Say Thank You", 25],
       ["Take Turns Opening Gifts", 20],
@@ -478,8 +479,8 @@
       ["Be Patient", 10]
     ],
 
-    // Question 2: Name something Santa might complain about on Christmas Eve.
     [
+      "Name something Santa might complain about on Christmas Eve.",
       ["Back Pain", 25],
       ["Tight Chimneys", 20],
       ["Long Night", 20],
@@ -488,8 +489,8 @@
       ["Cold Weather", 10]
     ],
 
-    // Question 3: Name something grandparents always say at Christmas.
     [
+      "Name something grandparents always say at Christmas.",
       ["You’ve Grown!", 35],
       ["I Told You Not to Get Me Anything", 25],
       ["This Is Too Much", 20],
@@ -497,8 +498,8 @@
       ["Let Me Take a Picture", 10]
     ],
 
-    // Question 4: What snack do people leave out for the reindeer?
     [
+      "What snack do people leave out for the reindeer?",
       ["Carrots", 45],
       ["Apples", 20],
       ["Oats", 15],
@@ -507,8 +508,8 @@
       ["Reindeer Treats", 5]
     ],
 
-    // Question 5: What did Santa trip on while delivering presents?
     [
+      "What did Santa trip on while delivering presents?",
       ["Loose Toys", 30],
       ["Wrapping Paper", 20],
       ["A Cat", 15],
@@ -517,8 +518,8 @@
       ["Tree Skirt", 10]
     ],
 
-    // Question 6: Name something people wish they could slow down at Christmas.
     [
+      "Name something people wish they could slow down at Christmas.",
       ["The Day Itself", 35],
       ["Kids Growing Up", 25],
       ["Family Time", 20],
@@ -526,8 +527,8 @@
       ["The Season", 10]
     ],
 
-    // Question 7: Name something that makes families say, “Next year will be easier.”
     [
+      "Name something that makes families say, “Next year will be easier.”",
       ["Kids Being Older", 30],
       ["Better Planning", 25],
       ["Fewer Gifts", 20],
@@ -535,8 +536,8 @@
       ["Lower Expectations", 10]
     ],
 
-    // Question 8: Name a question young adults dread hearing at Christmas.
     [
+      "Name a question young adults dread hearing at Christmas.",
       ["What Are You Doing With Your Life?", 35],
       ["When Are You Getting Married?", 25],
       ["How’s Work Going?", 20],
@@ -608,8 +609,8 @@
     }
 
     function buildBoard(questionIndex) {
-      const q = answers[questionIndex];
-      const slotCount = Math.min(10, q.length); // up to 10 (as you described)
+      const [, ...q] = answers[questionIndex];
+      const slotCount = Math.min(10, q.length); // up to 10
       revealed = new Array(slotCount).fill(false);
 
       boardEl.innerHTML = "";
@@ -677,7 +678,7 @@
 
     function computeTotal() {
       if (currentQuestionIndex === null) return 0;
-      const q = answers[currentQuestionIndex];
+      const [, ...q] = answers[currentQuestionIndex];
       let sum = 0;
       for (let i = 0; i < revealed.length; i++) {
         if (revealed[i]) sum += q[i][1];
@@ -770,18 +771,18 @@
     function formatAnswersText(questionIndex){
       const q = answers[questionIndex];
       const lines = [];
-      lines.push(`Answers for Question ${questionIndex + 1}`);
+      lines.push(`Question: ${q[0]}`);
       lines.push("");
-      for (let i = 0; i < q.length; i++) {
+      for (let i = 1; i < q.length; i++) {
         const [text, pts] = q[i];
-        lines.push(`${i + 1}. ${text} — ${pts}`);
+        lines.push(`${i}. ${text} — ${pts}`);
       }
       return lines.join("\n");
     }
 
     function generateQrForQuestion(questionIndex){
       if (!window.pako || !window.QRCode || !qrBoxEl) return;
-      const text = `1234\n${formatAnswersText(questionIndex)}`; // 1234 = hostview code
+      const text = `${hostviewCode}\n${formatAnswersText(questionIndex)}`;
       const compressed = window.pako.deflate(text);
       const payload = base64UrlFromBytes(compressed);
       const url = `https://mattribeiro.github.io/game-show-buzzer-race/hostview.html#${payload}`;

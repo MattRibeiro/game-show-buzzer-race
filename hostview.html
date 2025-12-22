@@ -94,7 +94,7 @@
       const text = new TextDecoder("utf-8").decode(inflated);
 
       // first line of the text is the "password", get it and then prompt user for it
-      const password = text.split("\n")[0];
+      const [password, ...message] = text.split("\n");
       if (password) {
         const answer = prompt("Enter password:", "");
         if (answer !== password) {
@@ -102,7 +102,7 @@
         }
       }
 
-      output.textContent = text;
+      output.textContent = message.join("\n");
     } catch (err) {
       output.className = "error";
       output.textContent =
